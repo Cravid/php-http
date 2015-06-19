@@ -1,0 +1,27 @@
+{
+    "name": "cravid/php-http",
+    "description": "",
+    "keywords": [],
+    "type": "library",
+    "authors": [
+        {
+            "name": "David Schunke",
+            "email": "cravid@schunke.me"
+        }
+    ],
+    "require": {
+        "php": ">=5.3.0",
+        "psr/http-message": "1.*"
+    },
+    "autoload": {
+        "psr-4": {"Cravid\\Http\\": "src/Cravid/Http"}
+    },
+    "autoload-dev": {
+        "psr-4": {"Cravid\\Http\\": "tests/Cravid/Http"}
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-master": "0.1.x-dev"
+        }
+    }
+}
