@@ -83,6 +83,51 @@ class Uri implements \Psr\Http\Message\UriInterface
 
 
     /**
+     * Constructor.
+     * 
+     * If uri is a valid uri, it parses the value into the different parts.
+     *
+     * @param string $uri The URI to use, optional.
+     */
+    public function __construct($uri = null)
+    {
+        if ($uri !== null) {
+            $parts = parse_url($uri);
+
+            if (isset($parts['scheme'])) {
+                $this->withScheme($parts['scheme']);
+            }
+
+            if (isset($parts['host'])) {
+                $this->withHost($parts['host']);
+            }
+
+            if (isset($parts['port'])) {
+                $this->withPort($parts['port']);
+            }
+
+            if (isset($parts['user'])) {
+                if (isset($parts['pass'])) {
+                    $this->withUserInfo($parts['user'], $parts['pass']);
+                }
+                $this->withUserInfo($parts['user']);
+            }
+
+            if (isset($parts['path'])) {
+                $this->withPath($parts['path']);
+            }
+
+            if (isset($parts['query'])) {
+                $this->withQuery($parts['query']);
+            }
+
+            if (isset($parts['fragment'])) {
+                $this->withFragment($parts['fragment']);
+            }
+        }
+    }
+
+    /**
      * Retrieve the scheme component of the URI.
      *
      * If no scheme is present, this method MUST return an empty string.
@@ -552,7 +597,7 @@ class Uri implements \Psr\Http\Message\UriInterface
             $uri .= $this->getAuthority();
         }
 
-        if (!empty($this->path())) {
+        if (!empty($this->getPath())) {
             $path = preg_replace('/[\/]+/i', '/', $this->getPath());
             
             if (!empty($uri) && substr($path, 0, 1) !== '/') {
@@ -562,11 +607,11 @@ class Uri implements \Psr\Http\Message\UriInterface
             $uri .= $path;
         }
 
-        if (!empty($this->getQuery()))) {
+        if (!empty($this->getQuery())) {
             $uri .= '?' . $this->getQuery();
         }
 
-        if (!empty($this->getFragment()))) {
+        if (!empty($this->getFragment())) {
             $uri .= '#' . $this->getFragment();
         }
 
