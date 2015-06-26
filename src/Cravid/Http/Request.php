@@ -2,8 +2,66 @@
 
 namespace Cravid\Http;
 
+/**
+ * Representation of an outgoing, client-side request.
+ *
+ * Per the HTTP specification, this interface includes properties for
+ * each of the following:
+ *
+ * - Protocol version
+ * - HTTP method
+ * - URI
+ * - Headers
+ * - Message body
+ *
+ * During construction, implementations MUST attempt to set the Host header from
+ * a provided URI if no Host header is provided.
+ *
+ * Requests are considered immutable; all methods that might change state MUST
+ * be implemented such that they retain the internal state of the current
+ * message and return an instance that contains the changed state.
+ */
 class Request extends Message implements \Psr\Http\Message\RequestInterface
 {
+    /**
+     * The request-target.
+     *
+     * @var string
+     */
+    private $requestTarget = '';
+
+    /**
+     * The HTTP method.
+     *
+     * @var string
+     */
+    private $method = '';
+
+    /**
+     * Valid HTTP methods.
+     *
+     * @var array
+     */
+    private $validMethods = array(
+        'CONNECT',
+        'DELETE',
+        'GET',
+        'HEAD',
+        'OPTIONS',
+        'PATCH',
+        'POST',
+        'PUT',
+        'TRACE',
+    );
+
+    /**
+     * The target URI.
+     *
+     * @var \Psr\Http\Message\UriInterface
+     */
+    private $uri = null;
+
+
     /**
      * Retrieves the message's request target.
      *
@@ -20,7 +78,26 @@ class Request extends Message implements \Psr\Http\Message\RequestInterface
      *
      * @return string
      */
-    public function getRequestTarget();
+    public function getRequestTarget()
+    {
+        if (!empty($this->requestTarget)) {
+            return $this->requestTarget;
+        }
+
+        if (!$this->uri) {
+            return '/';
+        }
+
+        $requestTarget = $this->uri->getPath();
+        if ($this->uri->getQuery()) {
+            $requestTarget .= '?' . $this->uri->getQuery();
+        }
+        if (empty($requestTarget)) {
+            $requestTarget = '/';
+        }
+        
+        return $requestTarget;
+    }
 
     /**
      * Return an instance with the specific request-target.
@@ -39,14 +116,26 @@ class Request extends Message implements \Psr\Http\Message\RequestInterface
      * @param mixed $requestTarget
      * @return self
      */
-    public function withRequestTarget($requestTarget);
+    public function withRequestTarget($requestTarget)
+    {
+        if (preg_match('#\s#', $requestTarget)) {
+            throw new InvalidArgumentException('The request target may not contain whitespaces.');
+        }
+
+        $this->requestTarget = $requestTarget;
+
+        return $self;
+    }
 
     /**
      * Retrieves the HTTP method of the request.
      *
      * @return string Returns the request method.
      */
-    public function getMethod();
+    public function getMethod()
+    {
+        return $this->method;
+    }
 
     /**
      * Return an instance with the provided HTTP method.
@@ -63,7 +152,25 @@ class Request extends Message implements \Psr\Http\Message\RequestInterface
      * @return self
      * @throws \InvalidArgumentException for invalid HTTP methods.
      */
-    public function withMethod($method);
+    public function withMethod($method)
+    {
+        if (!is_string($method)) {
+            throw new \InvalidArgumentException(
+                sprintf(
+                    'Argument "method" has to be a string, "%s" given.', 
+                    gettype($method)
+                )
+            );
+        }
+
+        if (!in_array(strtoupper($method), array_map('strtoupper', $this->validMethods))) {
+            throw new \InvalidArgumentException(sprintf('Invalid HTTP method "%s".', $method));
+        }
+
+        $this->method = $method;
+
+        return $this;
+    }
 
     /**
      * Retrieves the URI instance.
@@ -74,7 +181,10 @@ class Request extends Message implements \Psr\Http\Message\RequestInterface
      * @return UriInterface Returns a UriInterface instance
      *     representing the URI of the request.
      */
-    public function getUri();
+    public function getUri()
+    {
+        return $this->uri;
+    }
 
     /**
      * Returns an instance with the provided URI.
@@ -106,5 +216,25 @@ class Request extends Message implements \Psr\Http\Message\RequestInterface
      * @param bool $preserveHost Preserve the original state of the Host header.
      * @return self
      */
-    public function withUri(UriInterface $uri, $preserveHost = false);
+    public function withUri(UriInterface $uri, $preserveHost = false)
+    {
+        $this->uri = $uri;
+
+        if ($preserveHost) {
+            return $this;
+        }
+
+        if (!$uri->getHost()) {
+            return $this;
+        }
+
+        $host = $uri->getHost();
+        if ($uri->getPort()) {
+            $host .= ':' . $uri->getPort();
+        }
+
+        $this->withHeader($host);
+
+        return $this;
+    }
 }

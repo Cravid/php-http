@@ -99,7 +99,7 @@ abstract class Message implements \Psr\Http\Message\MessageInterface
      */
     public function getHeaders()
     {
-        //
+        return $this->headers;
     }
 
     /**
@@ -132,12 +132,15 @@ abstract class Message implements \Psr\Http\Message\MessageInterface
     public function getHeader($name)
     {
         if ($this->hasHeader($name)) {
-            return array_filter($this->headers, function ($key) use ($name) {
-                if (strcasecmp($var, $value) === 0) {
-                    return true;
-                }
-                return false;
-            }, ARRAY_FILTER_USE_KEY);
+            return call_user_func_array(
+                'array_merge', 
+                array_filter($this->headers, function ($key) use ($name) {
+                    if (strcasecmp($key, $name) === 0) {
+                        return true;
+                    }
+                    return false;
+                }, ARRAY_FILTER_USE_KEY)
+            );
         }
 
         return array();
@@ -184,9 +187,9 @@ abstract class Message implements \Psr\Http\Message\MessageInterface
      */
     public function withHeader($name, $value)
     {
-        $this->headers[$name] = strtolower($value);
+        $this->headers[$name] = array();
 
-        return $this;
+        return $this->withAddedHeader($name, $value);
     }
 
     /**
@@ -207,7 +210,17 @@ abstract class Message implements \Psr\Http\Message\MessageInterface
      */
     public function withAddedHeader($name, $value)
     {
-        // TODO
+        if (!$this->hasHeader($name)) {
+            return $this->withHeader($name, $value);
+        }
+
+        if (is_array($value)) {
+            $this->headers[$name] = array_merge($this->headers[$name], array_map('strtolower', $value));
+        } else {
+            $this->headers[$name][] = strtolower($value);
+        }
+
+        return $this;
     }
 
     /**
@@ -224,7 +237,12 @@ abstract class Message implements \Psr\Http\Message\MessageInterface
      */
     public function withoutHeader($name)
     {
-        unset($this->headers[strtolower($name)]);
+        $this->headers = array_filter($this->headers, function ($key) use ($name) {
+            if (strcasecmp($key, $name) === 0) {
+                return false;
+            }
+            return true;
+        }, ARRAY_FILTER_USE_KEY);
 
         return $this;
     }
