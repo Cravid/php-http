@@ -61,7 +61,7 @@ class Request extends Message implements \Psr\Http\Message\RequestInterface
      */
     private $uri = null;
 
-
+    
     /**
      * Retrieves the message's request target.
      *
@@ -119,7 +119,7 @@ class Request extends Message implements \Psr\Http\Message\RequestInterface
     public function withRequestTarget($requestTarget)
     {
         if (preg_match('#\s#', $requestTarget)) {
-            throw new InvalidArgumentException('The request target may not contain whitespaces.');
+            throw new \InvalidArgumentException('The request target may not contain whitespaces.');
         }
 
         $this->requestTarget = $requestTarget;
@@ -216,25 +216,24 @@ class Request extends Message implements \Psr\Http\Message\RequestInterface
      * @param bool $preserveHost Preserve the original state of the Host header.
      * @return self
      */
-    public function withUri(UriInterface $uri, $preserveHost = false)
+    public function withUri(\Psr\Http\Message\UriInterface $uri, $preserveHost = false)
     {
-        $this->uri = $uri;
-
-        if ($preserveHost) {
+        if ($this->uri === $uri) {
             return $this;
         }
 
-        if (!$uri->getHost()) {
-            return $this;
+        $that = clone $this;
+        $that->uri = $uri;
+
+        if (!$preserveHost) {
+            if ($host = $uri->getHost()) {
+                if ($port = $uri->getPort()) {
+                    $host .= ':' . $port;
+                }
+                $that = $that->withHeader('Host', $host);
+            }
         }
 
-        $host = $uri->getHost();
-        if ($uri->getPort()) {
-            $host .= ':' . $uri->getPort();
-        }
-
-        $this->withHeader($host);
-
-        return $this;
+        return $that;
     }
 }

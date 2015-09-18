@@ -51,6 +51,7 @@ class Uri implements \Psr\Http\Message\UriInterface
     private $supportedSchemes = [
         'http'      => 80,
         'https'     => 443,
+        'php'       => 0,
     ];
 
     /**
@@ -322,7 +323,7 @@ class Uri implements \Psr\Http\Message\UriInterface
             return '';
         }
 
-        return urlencode($this->query);
+        return $this->query;
     }
 
     /**
@@ -529,8 +530,18 @@ class Uri implements \Psr\Http\Message\UriInterface
                 sprintf('Query has to be a string, "%s" given.', $query)
             );
         }
+        
+        if (substr($query, 0, 1) === '?') {
+            $query = substr($query, 1);
+        }
 
-        $this->query = urldecode($query);
+        parse_str($query, $result);
+        foreach ($result as $key => $value)
+        {
+            unset($result[$key]);
+            $result[urlencode($key)] = urlencode($value);
+        }
+        $this->query = http_build_query($result);
 
         return $this;
     }

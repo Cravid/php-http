@@ -17,7 +17,7 @@ namespace Cravid\Http;
  * be implemented such that they retain the internal state of the current
  * message and return an instance that contains the changed state.
  */
-class Response extends Message implements Psr\Http\Message\ResponseInterface
+class Response extends Message implements \Psr\Http\Message\ResponseInterface
 {
     /**
      * The status code.
@@ -209,17 +209,18 @@ class Response extends Message implements Psr\Http\Message\ResponseInterface
      */
     public function withStatus($code, $reasonPhrase = '')
     {
-        if (!is_numeric($code) || !isset(self::$statusTexts[$code])) {
+        if (!is_numeric($code) || !isset(self::$statusTexts[$code])) {
             throw new \InvalidArgumentException(
                 sprintf('The status code has to be a valid HTTP status code, given %s.', $code)
             );
         }
 
-        $this->code = (int)$code;
+        $this->statusCode = (int)$code;
 
         if (empty($reasonPhrase)) {
             $reasonPhrase = $this->statusCodes[$code];
         }
+        $this->reasonPhrase = $reasonPhrase;
 
         return $this;
     }

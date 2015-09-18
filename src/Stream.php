@@ -20,16 +20,16 @@ class Stream implements \Psr\Http\Message\StreamInterface
 
 
     /**
-     * Creates the resource.
+     * Creates the stream.
      *
-     * @var string   $filename     The resource target.
-     * @var string   $mode         The mode to open the resource with.
-     * @var bool     $include_path Whether to look in the inlcude_path for the resource.
-     * @var resource $context      The context.
      */
-    public function __construct($filename, $mode = 'r', $include_path = true, resource $context = null)
+    public function __construct($filename, $mode, $include_path = true, $context = null)
     {
-        $this->stream = fopen($filename, $mode, $include_path, $context);
+        if ($context) { 
+            $this->stream = fopen($filename, $mode, $include_path, $context);
+        } else {
+            $this->stream = fopen($filename, $mode, $include_path);
+        }
 
         if ($this->stream === false) {
             throw new \RuntimeException(sprintf('Could not open stream with mode "%s".', $mode));
@@ -60,8 +60,13 @@ class Stream implements \Psr\Http\Message\StreamInterface
      */
     public function __toString()
     {
-        $this->seek(0);
-        return $this->getContents();
+        try {
+            $this->rewind();
+            return $this->getContents();
+        }
+        catch (\Exception $e) {
+            return '';
+        }
     }
 
     /**
@@ -83,7 +88,7 @@ class Stream implements \Psr\Http\Message\StreamInterface
      *
      * After the stream has been detached, the stream is in an unusable state.
      *
-     * @return resource|null Underlying PHP stream, if any
+     * @return resource|null Underlying PHP stream, if any.
      */
     public function detach()
     {
@@ -114,9 +119,9 @@ class Stream implements \Psr\Http\Message\StreamInterface
     }
 
     /**
-     * Returns the current position of the file read/write pointer
+     * Returns the current position of the file read/write pointer.
      *
-     * @return int Position of the file pointer
+     * @return int Position of the file pointer.
      * @throws \RuntimeException on error.
      */
     public function tell()
@@ -164,7 +169,7 @@ class Stream implements \Psr\Http\Message\StreamInterface
      */
     public function seek($offset, $whence = SEEK_SET)
     {
-        if (!$this->seekable()) {
+        if (!$this->isSeekable()) {
             throw new \RuntimeException('Stream is not seekable');
         }
 
@@ -314,7 +319,7 @@ class Stream implements \Psr\Http\Message\StreamInterface
             return null;
         }
 
-        $metadata = stream_get_meta_data($this->stream);
+        $meta = stream_get_meta_data($this->stream);
 
         if ($key !== null && isset($meta[$key])) {
             return $meta[$key];

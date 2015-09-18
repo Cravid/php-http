@@ -2,8 +2,6 @@
 
 namespace Cravid\Http;
 
-use \Psr\Http\Message\StreamInterface;
-
 /**
  * HTTP messages consist of requests from a client to a server and responses
  * from a server to a client. This interface defines the methods common to
@@ -19,18 +17,25 @@ use \Psr\Http\Message\StreamInterface;
 abstract class Message implements \Psr\Http\Message\MessageInterface
 {
     /**
-     * Protocol version number
+     * Protocol version number.
      *
      * @var string
      */
     private $protocolVersion = '1.1';
 
     /**
-     * Message headers.
+     * Message header collection with lowercase key mapping.
      *
      * @var array
      */
     private $headers = array();
+
+    /**
+     * Message header collection with case-sensitive key mapping.
+     *
+     * @var array
+     */
+    private $headerLines = array();
 
     /**
      * The request body.
@@ -99,7 +104,7 @@ abstract class Message implements \Psr\Http\Message\MessageInterface
      */
     public function getHeaders()
     {
-        return $this->headers;
+        return $this->headerLines;
     }
 
     /**
@@ -131,19 +136,8 @@ abstract class Message implements \Psr\Http\Message\MessageInterface
      */
     public function getHeader($name)
     {
-        if ($this->hasHeader($name)) {
-            return call_user_func_array(
-                'array_merge', 
-                array_filter($this->headers, function ($key) use ($name) {
-                    if (strcasecmp($key, $name) === 0) {
-                        return true;
-                    }
-                    return false;
-                }, ARRAY_FILTER_USE_KEY)
-            );
-        }
-
-        return array();
+        $header = strtolower($name);
+        return isset($this->headers[$header]) ? $this->headers[$header] : [];
     }
 
     /**
@@ -167,7 +161,7 @@ abstract class Message implements \Psr\Http\Message\MessageInterface
      */
     public function getHeaderLine($name)
     {
-        return implode(',', $this->getHeader($name));
+        return implode(', ', $this->getHeader($name));
     }
 
     /**
@@ -187,9 +181,28 @@ abstract class Message implements \Psr\Http\Message\MessageInterface
      */
     public function withHeader($name, $value)
     {
-        $this->headers[$name] = array();
+        $name = trim($name);
+        $header = strtolower($name);
+        if (is_array($value)) {
+            $this->headers[$header] = $value;
+            foreach ($this->headers[$header] as &$v)
+            {
+                $v = trim($v);
+            }
+        } else {
+            $this->headers[$header] = array(trim($value));
+        }
 
-        return $this->withAddedHeader($name, $value);
+        foreach (array_keys($this->headerLines) as $key)
+        {
+            if (strcasecmp($key, $header) === 0) {
+                unset($this->headerLines[$key]);
+            }
+        }
+
+        $this->headerLines[$name] = $this->headers[$header];
+
+        return $this;
     }
 
     /**
@@ -214,11 +227,8 @@ abstract class Message implements \Psr\Http\Message\MessageInterface
             return $this->withHeader($name, $value);
         }
 
-        if (is_array($value)) {
-            $this->headers[$name] = array_merge($this->headers[$name], array_map('strtolower', $value));
-        } else {
-            $this->headers[$name][] = strtolower($value);
-        }
+        $this->headers[strtolower($name)][] = $value;
+        $this->headerLines[$name][] = $value;
 
         return $this;
     }
@@ -237,12 +247,18 @@ abstract class Message implements \Psr\Http\Message\MessageInterface
      */
     public function withoutHeader($name)
     {
-        $this->headers = array_filter($this->headers, function ($key) use ($name) {
-            if (strcasecmp($key, $name) === 0) {
-                return false;
+        if (!$this->hasHeader($name)) {
+            return $this;
+        }
+
+        $header = strtolower($name);
+        unset($this->headers[$header]);
+        foreach (array_keys($this->headerLines) as $key)
+        {
+            if (strcasecmp($key, $header) === 0) {
+                unset($this->headerLines[$key]);
             }
-            return true;
-        }, ARRAY_FILTER_USE_KEY);
+        }
 
         return $this;
     }
@@ -270,7 +286,7 @@ abstract class Message implements \Psr\Http\Message\MessageInterface
      * @return self
      * @throws \InvalidArgumentException When the body is not valid.
      */
-    public function withBody(StreamInterface $body)
+    public function withBody(\Psr\Http\Message\StreamInterface $body)
     {
         $this->body = $body;
 
