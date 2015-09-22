@@ -5,7 +5,7 @@ namespace Cravid\Http;
 /**
  *
  */
-class Client
+class Client implements ClientInterface
 {
    /**
     * Request factory instance.
@@ -34,11 +34,22 @@ class Client
 
     /**
      *
+     */
+    public function setRequestFactory(RequestFactoryInterface $factory = null)
+    {
+        $this->factory = $factory;
+
+        return $this;
+    }
+
+    /**
+     *
      *
      * @param string $target Target URI.
+     * @param mixed[] $data Associative array of data to send.
      * @return \Psr\Http\Message\ResponseInterface
      */
-    public function get($target, $data = null)
+    public function get($target, array $data = array())
     {
         $separator = (parse_url($target, PHP_URL_QUERY) == null) ? '?' : '&';
         $target .= $separator . http_build_query($data);
@@ -54,15 +65,15 @@ class Client
      *
      *
      * @param string $target Target URI.
-     * @param mixed $data Data to send.
+     * @param mixed[] $data Associative array of data to send.
      * @return \Psr\Http\Message\ResponseInterface
      */
-    public function post($target, $data = null)
+    public function post($target, array $data = array())
     {
         $request = $this->factory->create(self::POST, $target, array(
             'Content-Type'  => 'application/x-www-form-urlencoded',
             //'Content-Type'  => 'application/json',
-        ), $data);
+        ), http_build_query($data));
 
         return $this->send($request);
     }
