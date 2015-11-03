@@ -218,7 +218,7 @@ class Response extends Message implements \Psr\Http\Message\ResponseInterface
         $this->statusCode = (int)$code;
 
         if (empty($reasonPhrase)) {
-            $reasonPhrase = $this->statusCodes[$code];
+            $reasonPhrase = $this->statusCode[$code];
         }
         $this->reasonPhrase = $reasonPhrase;
 

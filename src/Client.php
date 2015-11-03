@@ -17,8 +17,19 @@ class Client implements ClientInterface
     /**
      *
      */
-    const GET = 'GET';
-    const POST = 'POST';
+    const METHOD_GET = 'GET';
+    const METHOD_POST = 'POST';
+
+    /**
+     *
+     */
+    const REDIRECT_TEMPORARY = 1;
+    const REDIRECT_PERMANENT = 2;
+    const REDIRECT_PROXY = 3;
+    const REDIRECT_HTML = 3;
+    const REDIRECT_JS = 4;
+    const REDIRECT_BLOCK = 5;
+
 
 
     /**
@@ -54,10 +65,10 @@ class Client implements ClientInterface
         $separator = (parse_url($target, PHP_URL_QUERY) == null) ? '?' : '&';
         $target .= $separator . http_build_query($data);
 
-        $request = $this->factory->create(self::GET, $target, array(
+        $request = $this->factory->create(self::METHOD_GET, $target, array(
             'Content-Type'  => 'text/plain',
         ));
-
+        
         return $this->send($request);
     }
 
@@ -70,12 +81,123 @@ class Client implements ClientInterface
      */
     public function post($target, array $data = array())
     {
-        $request = $this->factory->create(self::POST, $target, array(
+        $request = $this->factory->create(self::METHOD_POST, $target, array(
             'Content-Type'  => 'application/x-www-form-urlencoded',
-            //'Content-Type'  => 'application/json',
         ), http_build_query($data));
 
         return $this->send($request);
+    }
+
+    /**
+     *
+     *
+     * @param string $target Target URI.
+     * @param mixed[] $data Associative array of data to send.
+     * @return \Psr\Http\Message\ResponseInterface
+     */
+    public function json($target, array $data = array())
+    {
+        $request = $this->factory->create(self::METHOD_POST, $target, array(
+            'Content-Type'  => 'application/json',
+        ), json_encode($data, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT));
+
+        return $this->send($request);
+    }
+
+    /**
+     *
+     *
+     * @param string $target Target URI.
+     * @param mixed[] $data Associative array of data to send with.
+     * @param int $type Redirect type to use.
+     * @return \Psr\Http\Message\ResponseInterface
+     */
+    public function redirect($target, array $data = array(), $type = self::REDIRECT_TEMPORARY)
+    {
+        $separator = (parse_url($target, PHP_URL_QUERY) == null) ? '?' : '&';
+        $target .= $separator . http_build_query($data);
+        
+        $response = new Response();
+
+        switch ($type)
+        {
+            case self::REDIRECT_TEMPORARY:
+                $response->withStatus(Response::HTTP_TEMPORARY_REDIRECT);
+                $response->withHeader('Location', $target);
+                break;
+            case self::REDIRECT_PERMANENT:
+                $response->withStatus(Response::HTTP_PERMANENTLY_REDIRECT);
+                $response->withHeader('Location', $target);
+                break;
+            case self::REDIRECT_PROXY:
+                $response->withStatus(Response::HTTP_USE_PROXY);
+                $response->withHeader('Location', $target);
+                break;
+            case self::REDIRECT_HTML:
+                $response->withStatus(Response::HTTP_TEMPORARY_REDIRECT);
+                $response->withBody(new StringStream(sprintf('<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8" />
+        <meta http-equiv="refresh" content="1;url=%1$s" />
+
+        <title>Redirecting to %1$s</title>
+    </head>
+    <body>
+        Redirecting to <a href="%1$s">%1$s</a>.
+    </body>
+</html>', htmlspecialchars($target, ENT_QUOTES, 'UTF-8'))));
+                break;
+            case self::REDIRECT_JS:
+                $response->withStatus(Response::HTTP_TEMPORARY_REDIRECT);
+                $response->withBody(new StringStream(sprintf('<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8" />
+
+        <title>Redirecting to %1$s</title>
+    </head>
+    <body>
+        Redirecting to <a href="%1$s">%1$s</a>.
+
+        <script>
+            setTimeout(function(){
+                window.location.href = "{{ url }}"
+            }, 10);
+        </script>
+    </body>
+</html>', htmlspecialchars($target, ENT_QUOTES, 'UTF-8'))));
+                break;
+            case self::REDIRECT_BLOCK:
+                $response->withStatus(Response::HTTP_TEMPORARY_REDIRECT);
+                $response->withBody(new StringStream(sprintf('<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8" />
+
+        <title>Redirecting to %1$s</title>
+    </head>
+    <body>
+        Redirecting to <a href="%1$s">%1$s</a>.
+
+        <script>
+            setTimeout(function(){
+                window.location.replace("{{ url }}")
+            }, 10);
+
+            history.pushState(null,null,location.href);
+            window.onpopstate = function() {
+                history.pushState(null,null,location.href);
+            }
+        </script>
+    </body>
+</html>', htmlspecialchars($target, ENT_QUOTES, 'UTF-8'))));
+                break;
+            default:
+                throw new \InvalidArgumentException(sprintf('Redirect type is not valid, given %s.', $type));
+        }
+
+        return $response;
     }
 
     /**
