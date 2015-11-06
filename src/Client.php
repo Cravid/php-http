@@ -124,14 +124,17 @@ class Client implements ClientInterface
             case self::REDIRECT_TEMPORARY:
                 $response->withStatus(Response::HTTP_TEMPORARY_REDIRECT);
                 $response->withHeader('Location', $target);
+                $response->withBody(new StringStream());
                 break;
             case self::REDIRECT_PERMANENT:
                 $response->withStatus(Response::HTTP_PERMANENTLY_REDIRECT);
                 $response->withHeader('Location', $target);
+                $response->withBody(new StringStream());
                 break;
             case self::REDIRECT_PROXY:
                 $response->withStatus(Response::HTTP_USE_PROXY);
                 $response->withHeader('Location', $target);
+                $response->withBody(new StringStream());
                 break;
             case self::REDIRECT_HTML:
                 $response->withStatus(Response::HTTP_TEMPORARY_REDIRECT);
