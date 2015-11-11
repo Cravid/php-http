@@ -165,11 +165,11 @@ class Client implements ClientInterface
 
         <script>
             setTimeout(function(){
-                window.location.href = "%1$s"
+                window.location.href = "%2$s"
             }, 10);
         </script>
     </body>
-</html>', htmlspecialchars($target, ENT_QUOTES, 'UTF-8'))));
+</html>', htmlspecialchars($target, ENT_QUOTES, 'UTF-8'), $target)));
                 break;
             case self::REDIRECT_BLOCK:
                 $response->withStatus(Response::HTTP_TEMPORARY_REDIRECT);
@@ -185,7 +185,7 @@ class Client implements ClientInterface
 
         <script>
             setTimeout(function(){
-                window.location.replace("%1$s")
+                window.location.replace("%2$s")
             }, 10);
 
             history.pushState(null,null,location.href);
@@ -194,7 +194,7 @@ class Client implements ClientInterface
             }
         </script>
     </body>
-</html>', htmlspecialchars($target, ENT_QUOTES, 'UTF-8'))));
+</html>', htmlspecialchars($target, ENT_QUOTES, 'UTF-8'), $target)));
                 break;
             default:
                 throw new \InvalidArgumentException(sprintf('Redirect type is not valid, given %s.', $type));
