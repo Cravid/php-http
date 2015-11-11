@@ -165,7 +165,7 @@ class Client implements ClientInterface
 
         <script>
             setTimeout(function(){
-                window.location.href = "{{ url }}"
+                window.location.href = "%1$s"
             }, 10);
         </script>
     </body>
@@ -185,7 +185,7 @@ class Client implements ClientInterface
 
         <script>
             setTimeout(function(){
-                window.location.replace("{{ url }}")
+                window.location.replace("%1$s")
             }, 10);
 
             history.pushState(null,null,location.href);
