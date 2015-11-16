@@ -181,6 +181,7 @@ class Client implements ClientInterface
 <html>
     <head>
         <meta charset="UTF-8" />
+        <meta http-equiv="refresh" content="1;url=%1$s" />
 
         <title>Redirecting to %1$s</title>
     </head>
