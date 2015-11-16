@@ -181,15 +181,13 @@ class Client implements ClientInterface
 <html>
     <head>
         <meta charset="UTF-8" />
-        <meta http-equiv="refresh" content="1;url=%1$s" />
+        <noscript>
+            <meta http-equiv="refresh" content="1;url=%1$s" />
+        </noscript>
 
         <title>Redirecting to %1$s</title>
     </head>
     <body>
-        <noscript>
-            Redirecting to <a href="%1$s">%1$s</a>.
-        </noscript>
-        
         <script>
             setTimeout(function(){
                 window.location.replace("%2$s")
