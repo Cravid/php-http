@@ -26,9 +26,9 @@ class Client implements ClientInterface
     const REDIRECT_TEMPORARY = 1;
     const REDIRECT_PERMANENT = 2;
     const REDIRECT_PROXY = 3;
-    const REDIRECT_HTML = 3;
-    const REDIRECT_JS = 4;
-    const REDIRECT_BLOCK = 5;
+    const REDIRECT_HTML = 4;
+    const REDIRECT_JS = 5;
+    const REDIRECT_BLOCK = 6;
 
 
 
