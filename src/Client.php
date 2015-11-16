@@ -147,7 +147,9 @@ class Client implements ClientInterface
         <title>Redirecting to %1$s</title>
     </head>
     <body>
-        Redirecting to <a href="%1$s">%1$s</a>.
+        <noscript>
+            Redirecting to <a href="%1$s">%1$s</a>.
+        </noscript>
     </body>
 </html>', htmlspecialchars($target, ENT_QUOTES, 'UTF-8'))));
                 break;
@@ -161,7 +163,9 @@ class Client implements ClientInterface
         <title>Redirecting to %1$s</title>
     </head>
     <body>
-        Redirecting to <a href="%1$s">%1$s</a>.
+        <noscript>
+            Redirecting to <a href="%1$s">%1$s</a>.
+        </noscript>
 
         <script>
             setTimeout(function(){
@@ -181,8 +185,10 @@ class Client implements ClientInterface
         <title>Redirecting to %1$s</title>
     </head>
     <body>
-        Redirecting to <a href="%1$s">%1$s</a>.
-
+        <noscript>
+            Redirecting to <a href="%1$s">%1$s</a>.
+        </noscript>
+        
         <script>
             setTimeout(function(){
                 window.location.replace("%2$s")
