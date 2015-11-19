@@ -137,7 +137,8 @@ class Client implements ClientInterface
                 $response->withBody(new StringStream());
                 break;
             case self::REDIRECT_HTML:
-                $response->withStatus(Response::HTTP_TEMPORARY_REDIRECT);
+                //$response->withStatus(Response::HTTP_TEMPORARY_REDIRECT);
+                $response->withStatus(Response::HTTP_OK);
                 $response->withBody(new StringStream(sprintf('<!DOCTYPE html>
 <html>
     <head>
@@ -154,7 +155,8 @@ class Client implements ClientInterface
 </html>', htmlspecialchars($target, ENT_QUOTES, 'UTF-8'))));
                 break;
             case self::REDIRECT_JS:
-                $response->withStatus(Response::HTTP_TEMPORARY_REDIRECT);
+                //$response->withStatus(Response::HTTP_TEMPORARY_REDIRECT);
+                $response->withStatus(Response::HTTP_OK);
                 $response->withBody(new StringStream(sprintf('<!DOCTYPE html>
 <html>
     <head>
@@ -176,7 +178,8 @@ class Client implements ClientInterface
 </html>', htmlspecialchars($target, ENT_QUOTES, 'UTF-8'), $target)));
                 break;
             case self::REDIRECT_BLOCK:
-                $response->withStatus(Response::HTTP_TEMPORARY_REDIRECT);
+                //$response->withStatus(Response::HTTP_TEMPORARY_REDIRECT);
+                $response->withStatus(Response::HTTP_OK);
                 $response->withBody(new StringStream(sprintf('<!DOCTYPE html>
 <html>
     <head>
