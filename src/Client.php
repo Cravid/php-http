@@ -229,7 +229,7 @@ class Client implements ClientInterface
             $request->getUri()->getScheme()   => array(
                 'method'            => $request->getMethod(),
                 'content'           => $request->getBody()->getContents(),
-                'request_fulluri'   => true,
+                //'request_fulluri'   => true,
                 'protocol_version'  => (float)$request->getProtocolVersion(),
                 'header'            => $header,
             ),
