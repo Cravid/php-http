@@ -60,14 +60,16 @@ class Client implements ClientInterface
      * @param mixed[] $data Associative array of data to send.
      * @return \Psr\Http\Message\ResponseInterface
      */
-    public function get($target, array $data = array())
+    public function get($target, array $data = array(), array $header = array())
     {
+        $header = array_merge(array(
+            'Content-Type'  => 'text/plain',
+        ), $header);
+
         $separator = (parse_url($target, PHP_URL_QUERY) == null) ? '?' : '&';
         $target .= $separator . http_build_query($data);
 
-        $request = $this->factory->create(self::METHOD_GET, $target, array(
-            'Content-Type'  => 'text/plain',
-        ));
+        $request = $this->factory->create(self::METHOD_GET, $target, $header);
         
         return $this->send($request);
     }
@@ -79,11 +81,13 @@ class Client implements ClientInterface
      * @param mixed[] $data Associative array of data to send.
      * @return \Psr\Http\Message\ResponseInterface
      */
-    public function post($target, array $data = array())
+    public function post($target, array $data = array(), array $header = array())
     {
-        $request = $this->factory->create(self::METHOD_POST, $target, array(
+        $header = array_merge(array(
             'Content-Type'  => 'application/x-www-form-urlencoded',
-        ), http_build_query($data));
+        ), $header);
+
+        $request = $this->factory->create(self::METHOD_POST, $target, $header, http_build_query($data));
 
         return $this->send($request);
     }
@@ -95,15 +99,17 @@ class Client implements ClientInterface
      * @param mixed[] $data Associative array of data to send.
      * @return \Psr\Http\Message\ResponseInterface
      */
-    public function json($target, array $data = array())
+    public function json($target, array $data = array(), array $header = array())
     {
-        $request = $this->factory->create(self::METHOD_POST, $target, array(
+        $header = array_merge(array(
             'Content-Type'  => 'application/json',
-        ), json_encode($data, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT));
+        ), $header);
+
+        $request = $this->factory->create(self::METHOD_POST, $target, $header, json_encode($data, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT));
 
         return $this->send($request);
     }
-
+    
     /**
      *
      *
@@ -118,7 +124,7 @@ class Client implements ClientInterface
         $target .= $separator . http_build_query($data);
         
         $response = new Response();
-
+        
         switch ($type)
         {
             case self::REDIRECT_TEMPORARY:
