@@ -294,8 +294,7 @@ class Uri implements \Psr\Http\Message\UriInterface
      */
     public function getPath()
     {
-        //return urlencode($this->path);
-        return $this->path;
+        return urlencode(urldecode($this->path));
     }
 
     /**
@@ -349,7 +348,7 @@ class Uri implements \Psr\Http\Message\UriInterface
             return '';
         }
 
-        return urlencode($this->fragment);
+        return urlencode(urldecode($this->fragment));
     }
 
     /**
@@ -540,7 +539,7 @@ class Uri implements \Psr\Http\Message\UriInterface
         foreach ($result as $key => $value)
         {
             unset($result[$key]);
-            $result[urlencode($key)] = urlencode($value);
+            $result[urlencode(urldecode($key))] = urlencode(urldecode($value));
         }
         $this->query = http_build_query($result);
 
