@@ -294,7 +294,8 @@ class Uri implements \Psr\Http\Message\UriInterface
      */
     public function getPath()
     {
-        return urlencode(urldecode($this->path));
+        return $this->path;
+        //return urlencode(urldecode($this->path));
     }
 
     /**

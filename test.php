@@ -18,5 +18,7 @@ $context = stream_context_create(array(
         'timeout'          => 5,
     ),
 ));
-var_dump($context);
-die();
+
+$uri = new \Cravid\Http\Uri('http://www.google.de/foo/bar/index.php?a=1&b=2&test=hallo welt');
+$test = (string)$uri;
+var_dump($test);
