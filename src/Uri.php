@@ -537,11 +537,10 @@ class Uri implements \Psr\Http\Message\UriInterface
         }
 
         parse_str($query, $result);
-        foreach ($result as $key => $value)
-        {
+        array_walk_recursive($result, function ($key, $value) use ($result) {
             unset($result[$key]);
             $result[urlencode(urldecode($key))] = urlencode(urldecode($value));
-        }
+        });
         $this->query = http_build_query($result);
 
         return $this;
