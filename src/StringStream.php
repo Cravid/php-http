@@ -14,11 +14,11 @@ class StringStream extends Stream
     {
         if (!is_string($content)) {
             throw new \InvalidArgumentException(
-                sprintf('Content has to be a string, given "%s".', gettype($stream))
+                sprintf('Content has to be a string, given "%s".', gettype($content))
             );
         }
         
-        parent::__construct('php://temp,', 'r+');
+        parent::__construct('php://temp', 'r+');
 
         $this->write($content);
         $this->rewind();
